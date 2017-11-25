@@ -1,0 +1,94 @@
+Estados: 
+Estado #0: 
+Producciones: 
+F=. id
+F=. '(' E ')' 
+T=T '*' . F 
+Estado #1: 
+Producciones: 
+E=E . '+' T 
+F='(' E . ')' 
+Estado #2: 
+Producciones: 
+E=T . 
+T=T . '*' F 
+Estado #3: 
+Producciones: 
+S'=E @ . 
+Estado #4: 
+Producciones: 
+E=. E '+' T 
+E=. T
+T=. T '*' F 
+F=. id
+T=. F
+S'=. E @
+F=. '(' E ')' 
+Estado #5: 
+Producciones: 
+F='(' E ')' . 
+Estado #6: 
+Producciones: 
+T=T . '*' F 
+E=E '+' T . 
+Estado #7: 
+Producciones: 
+F=id . 
+Estado #8: 
+Producciones: 
+E=. E '+' T 
+F=. '(' E ')' 
+T=. F
+F=. id
+F='(' . E ')' 
+E=. T
+T=. T '*' F 
+Estado #9: 
+Producciones: 
+T=T '*' F . 
+Estado #10: 
+Producciones: 
+E=E '+' . T 
+T=. F
+F=. '(' E ')' 
+F=. id
+T=. T '*' F 
+Estado #11: 
+Producciones: 
+T=F . 
+Estado #12: 
+Producciones: 
+S'=E . @ 
+E=E . '+' T 
+
+
+Transiciones: 
+Origen: 4, F, Destino: 11
+Origen: 8, T, Destino: 2
+Origen: 10, T, Destino: 6
+Origen: 4, '(', Destino: 8
+Origen: 8, E, Destino: 1
+Origen: 0, id, Destino: 7
+Origen: 8, T, Destino: 2
+Origen: 4, E, Destino: 12
+Origen: 10, '(', Destino: 8
+Origen: 4, T, Destino: 2
+Origen: 6, '*', Destino: 0
+Origen: 12, '+', Destino: 10
+Origen: 4, T, Destino: 2
+Origen: 1, '+', Destino: 10
+Origen: 10, F, Destino: 11
+Origen: 8, '(', Destino: 8
+Origen: 10, id, Destino: 7
+Origen: 0, '(', Destino: 8
+Origen: 12, @, Destino: 3
+Origen: 4, E, Destino: 12
+Origen: 8, F, Destino: 11
+Origen: 1, ')', Destino: 5
+Origen: 10, T, Destino: 6
+Origen: 0, F, Destino: 9
+Origen: 4, id, Destino: 7
+Origen: 8, E, Destino: 1
+Origen: 8, id, Destino: 7
+Origen: 2, '*', Destino: 0
+

@@ -1,0 +1,10 @@
+COMPILER prueba
+(.
+/*--------------Scanner Specification----------*/
+.)
+CHARACTERS
+digit = "0123456789".
+letter = "abcdefghijklmnopqrstuvwxyz".
+KEYWORDS
+if = "if".
+END prueba.
