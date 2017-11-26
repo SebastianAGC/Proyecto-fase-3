@@ -1,0 +1,21 @@
+COMPILER Ejemplo
+CHARACTERS
+letter = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".
+digit = "0123456789".
+
+KEYWORDS
+if="if".
+while="while".
+else = "else".
+TOKENS
+id = letter{letter}.
+number = digit{digit}.
+IGNORE "	".
+PRODUCTIONS
+E = T S .
+S = + T S | # .
+T = F TP .
+TP = * F TP | # .
+F = ( E ) | id .
+
+END Ejemplo.

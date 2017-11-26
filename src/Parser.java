@@ -1,5 +1,8 @@
 import com.sun.javafx.binding.StringFormatter;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -10,6 +13,8 @@ public class Parser {
 
     private ArrayList<String> symbols = new ArrayList<>();
     private ArrayList<String> followSymbols = new ArrayList<>();
+    public String[][] tabla;
+
 
     public ArrayList<String> firstCalculator(ArrayList<String> terminals, ArrayList<String> nonterminals, ArrayList<Productions> productions,  String input){
 
@@ -265,6 +270,7 @@ public class Parser {
         Set<EstadoLR0> T = new HashSet<>();
         Set<DtranLR0> E = new HashSet<>();
 
+        int numeroEstado = 0;
         //Creando el estado inicial del automata
         Set<Productions> setInit = new HashSet<>();
         //Creando la produccion inicial extendida
@@ -275,6 +281,7 @@ public class Parser {
         EstadoLR0 init = new EstadoLR0(setInit);
         //Obteniendo el closure del estado inicial
         init = Cloure(init, productions);
+        init.setNumeroEstadoDFA(numeroEstado);
 
         //Inicializando el conjunto de estados
         T.add(init);
@@ -293,6 +300,8 @@ public class Parser {
                                 EstadoLR0 J = Goto(I, parts[i+1],productions);
                                 EstadoLR0 res = yaExisteEstado(J, T);
                                 if(res.equals(J)){
+                                    numeroEstado++;
+                                    J.setNumeroEstadoDFA(numeroEstado);
                                     T.add(J);
                                     stack.add(J);
                                 }
@@ -430,7 +439,7 @@ public class Parser {
         simbolos.addAll(terminals);
         int cantidad = simbolos.size();
         System.out.println(cantidad);
-        String[][] tabla = new String[T.size()][cantidad];
+        tabla = new String[T.size()][cantidad];
 
         for(int i=0;i<T.size();i++){
             for(int j = 0; j<cantidad;j++){
@@ -499,17 +508,63 @@ public class Parser {
 
         String cadena = "";
         for(int j=0;j<cantidad;j++){
-            cadena+=simbolos.get(j)+ "              ";
+            cadena+=simbolos.get(j)+ ",";
         }
         cadena+="\n";
         for(int i=0;i<T.size();i++){
             for(int j=0;j<cantidad;j++){
-                cadena+=tabla[i][j]+ "          ";
+                cadena+=tabla[i][j]+ " ,";
             }
             cadena+="\n";
         }
 
-        System.out.println("Se ha creado la tabla de parseo.\n" + cadena);
+        try {
+
+            PrintWriter writer = new PrintWriter("tabla de parseo.txt");
+            writer.println(cadena);
+            writer.close();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+        String producciones = "";
+        for (Productions p:productions) {
+            producciones+=p.toString() +"\n";
+        }
+
+        try {
+
+            PrintWriter writer = new PrintWriter("producciones.txt");
+            writer.println(producciones);
+            writer.close();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+        String symbol = "";
+        for (String s:simbolos) {
+            symbol+=s+"\n";
+        }
+
+        try {
+
+            PrintWriter writer = new PrintWriter("simbolos.txt");
+            writer.println(symbol);
+            writer.close();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+        //System.out.println("Se ha creado la tabla de parseo.\n" + cadena);
     }
 
     public String bodyC(String body){

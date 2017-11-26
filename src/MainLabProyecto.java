@@ -163,6 +163,7 @@ public class MainLabProyecto{
 
         Scanner sc = new Scanner(System.in);
         Parser theParser = new Parser();
+        /*
         System.out.println("1. First\n2. Follow\nIngrese la opcion que desea ejecutar: ");
         String input = sc.nextLine();
         if(input.equals("1")){
@@ -175,13 +176,12 @@ public class MainLabProyecto{
                 input = sc.nextLine();
                 theParser.follow(input, parserOperations.getNonterminals(), parserOperations.getTerminals(), structure.getProductionsContent());
             }
-        }
-        //String cadena = theParser.correrPunto(". a");
-        //System.out.println(cadena);
+        }*/
+
         ArrayList<Productions> newProductions = theParser.fixProductions(structure.getProductionsContent());
         structure.setProductionsContent(newProductions);
         AutomataLR0 nier = theParser.creacionAutomata(structure.getProductionsContent());
-        theParser.nombrarEstados(nier);
+        //theParser.nombrarEstados(nier);
         System.out.println("Se ha creado un automata.");
 
         BufferedWriter bw = null;
