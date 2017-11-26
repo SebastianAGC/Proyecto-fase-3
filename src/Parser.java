@@ -16,6 +16,7 @@ public class Parser {
         //Separando el input que realiza el usuario.
         String[] inputs = input.split(" ");
         String s = inputs[0];
+        s = s.replace("'", "");
         if(terminals.contains(s)){
             if(!symbols.contains(s)){
                 symbols.add(s);
@@ -41,7 +42,9 @@ public class Parser {
                 cabeza = cabeza.replace(" ", "");
                 if(cabeza.equals(headNueva)){
                     String body = p.getBody(); //Si la cabeza coincide obtiene el cuerpo de esa produccion.
-                    body = body.substring(0, body.length()-1);
+                    if(body.endsWith(".")){
+                        body = body.substring(0, body.length()-1);
+                    }
                     body = body.replace("'", "");
                     if(body.contains("|")){ //Si el cuerpo de la produccion contiene | lo separa en dos partes
                         String[] bodyParts = body.split("\\|");
@@ -105,19 +108,19 @@ public class Parser {
             String c = productions.get(0).getHead();
             c = c.replace(" ", "");
             if(input.equals(c)){
-                if(!followSymbols.contains("$")){
-                    followSymbols.add("$");
+                if(!followSymbols.contains("@")){
+                    followSymbols.add("@");
                 }
-            }else{
+            }
                 for (Productions p:productions) {
 
                     //Obteniendo el cuerpo de cada produccion para verificar si contienen el input
                     String body = p.getBody();
-                    body = body.substring(0, body.length()-1);
+                    body = bodyC(body);
                     if(body.contains("|")){
                         String[] bodyParts = body.split("\\|");
                         for (String s:bodyParts) {
-                            s = s.substring(1);
+                            s = bodyC(s);
                             s = s.replace("'", "");
                             String[] parts = s.split(" ");
                             for(int i=0; i<parts.length; i++){
@@ -161,7 +164,7 @@ public class Parser {
                         }
                     }
                 }
-            }
+
             System.out.println("Resultado: " + followSymbols);
         }else{
             System.out.println("El símbolo ingresado no es un símbolo no-terminal.");
@@ -286,14 +289,18 @@ public class Parser {
                     String part = parts[i];
                     if(i!=parts.length-1){
                         if(parts[i].equals(".")){
-                            EstadoLR0 J = Goto(I, parts[i+1],productions);
-                            EstadoLR0 res = yaExisteEstado(J, T);
-                            if(res.equals(J)){
-                                T.add(J);
-                                stack.add(J);
+                            if(!parts[i+1].equals("@")){
+                                EstadoLR0 J = Goto(I, parts[i+1],productions);
+                                EstadoLR0 res = yaExisteEstado(J, T);
+                                if(res.equals(J)){
+                                    T.add(J);
+                                    stack.add(J);
+                                }
+                                DtranLR0 newTransicion = new DtranLR0(I, parts[i+1],res);
+                                if(!yaExisteTrans(newTransicion, E)){
+                                    E.add(newTransicion);
+                                }
                             }
-                            DtranLR0 newTransicion = new DtranLR0(I, parts[i+1],res);
-                            E.add(newTransicion);
                         }
                     }
                 }
@@ -311,7 +318,7 @@ public class Parser {
         for (Productions p:productions) {
             String head = p.getHead();
             String body = p.getBody();
-            body = body.substring(0, body.length()-1);
+            //body = body.substring(0, body.length()-1);
             if(body.contains("|")){
                 String[] parts = body.split("\\|");
                 for (String s:parts) {
@@ -323,6 +330,26 @@ public class Parser {
             }
         }
         return newProductions;
+    }
+
+    public boolean yaExisteTrans(DtranLR0 trans, Set<DtranLR0> E){
+        boolean yaExiste = false;
+        EstadoLR0 estadoOrigen = trans.getOrigen();
+        EstadoLR0 estadoDestino = trans.getDestino();
+        String t = trans.getTransicion();
+        for (DtranLR0 transicion:E) {
+            EstadoLR0 estadoOrigenT = transicion.getOrigen();
+            EstadoLR0 estadoDestinoT = transicion.getDestino();
+            String tT = transicion.getTransicion();
+            if(estadoOrigenT.equals(estadoOrigen)){
+                if(estadoDestinoT.equals(estadoDestino)){
+                    if(tT.equals(t)){
+                        yaExiste=true;
+                    }
+                }
+            }
+        }
+        return yaExiste;
     }
 
     public EstadoLR0 yaExisteEstado(EstadoLR0 revisar, Set<EstadoLR0> T){
@@ -387,86 +414,10 @@ public class Parser {
         return descripcion;
     }
 
-    public void creadorTablaParseo(AutomataLR0 nier, ArrayList<String> nonterminals, ArrayList<String> terminals, ArrayList<Productions> productions){
-        Set<EstadoLR0> set = nier.getEstados();
-        Set<DtranLR0> trans = nier.getTransiciones();
-        ArrayList<EstadoLR0> T = new ArrayList<>();
-        T.addAll(set);
-        ArrayList<String> elementos = new ArrayList<>();
-        int productionNumber = 0;
-        int contRR = 0;
-
-
-        elementos.addAll(nonterminals);
-        elementos.addAll(terminals);
-
-        int numeroEstados = T.size();
-        int numeroElementos = elementos.size();
-        String[][] tabla = new String[numeroEstados+1][numeroElementos+1];
-        for(int i=1; i<numeroEstados+1;i++){
-            tabla[i][0] = T.get(i-1).getNumeroEstadoDFA() + "";
-        }
-
-        for(int i=1; i<numeroElementos+1;i++){
-            tabla[0][i] = elementos.get(i-1);
-        }
-
-        for(int i=1; i<numeroEstados+1;i++){
-            EstadoLR0 I = T.get(i-2);
-            contRR=0;
-            for (Productions p:I.getProductionsSet()) {
-                if(I.getProductionsSet().size()==1){
-                    //posible reduce
-                    String body = p.getBody();
-                    String[] parts = body.split(" ");
-                    if(parts[parts.length-1].equals(".")){
-                        followSymbols.clear();
-                        follow(p.getHead(), nonterminals, terminals, productions);
-                        for (String s:followSymbols) {
-                            for (String m : elementos) {
-                                if (s.equals(m)) {
-                                    int j = elementos.indexOf(m);
-                                    body = body.substring(0, body.length() - 3);
-                                    for (Productions pr : productions) {
-                                        if (pr.getBody().equals(body)) {
-                                            productionNumber = productions.indexOf(pr);
-                                        }
-                                    }
-                                    tabla[i][j + 1] = "r " + productionNumber;
-                                }
-                            }
-                        }
-                    }else{
-                        for (DtranLR0 d: trans) {
-                            if(d.getOrigen().getNumeroEstadoDFA()==I.getNumeroEstadoDFA()){
-                                for (String m:elementos) {
-                                    if(d.getTransicion().equals(m)){
-                                        tabla[i][elementos.indexOf(m)+1] = "s " + d.getDestino().getNumeroEstadoDFA();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }else{
-                    //No es reduce
-                    if(contRR>=2){
-                        System.out.println("Existe un problema reduce reduce en el estado " + I.getNumeroEstadoDFA());
-                    }else{
-                        String body = p.getBody();
-                        String[] parts = body.split(" ");
-                        if(parts[parts.length-1].equals(".")){
-                            contRR++;
-                        }
-
-                    }
-                }
-            }
-        }
-    }
-
     public void parsingTable(AutomataLR0 nier, ArrayList<String> nonterminals, ArrayList<String> terminals, ArrayList<Productions> productions){
         Set<EstadoLR0> set = nier.getEstados();
         Set<DtranLR0> trans = nier.getTransiciones();
+        int numeroProduccion = 0;
 
         //Creando un arraylist de todos los estados
         ArrayList<EstadoLR0> T = new ArrayList<>();
@@ -475,25 +426,100 @@ public class Parser {
         //Creando un arraylist de todos los simbolos
         ArrayList<String> simbolos = new ArrayList<>();
         simbolos.addAll(nonterminals);
+        simbolos.add("@");
         simbolos.addAll(terminals);
+        int cantidad = simbolos.size();
+        System.out.println(cantidad);
+        String[][] tabla = new String[T.size()][cantidad];
 
-        String[][] tabla = new String[T.size()][simbolos.size()];
+        for(int i=0;i<T.size();i++){
+            for(int j = 0; j<cantidad;j++){
+                tabla[i][j]="";
+            }
+        }
 
-        //Calculando el follow de todos los simbolos no terminales
-        ArrayList<String> follow = new ArrayList<>();
-        
 
         for (EstadoLR0 I: T) {
             for (DtranLR0 d:trans) {
                 if(d.getOrigen().equals(I)){
-                    if(terminals.contains(d.getTransicion())){
-                        tabla[I.getNumeroEstadoDFA()][simbolos.indexOf(d.getTransicion())] = "s " + d.getDestino().getNumeroEstadoDFA();
+                    String t = d.getTransicion();
+                    t = t.replace("'", "");
+                    if(terminals.contains(t)){
+                        if(tabla[I.getNumeroEstadoDFA()][simbolos.indexOf(t)].equals("")){
+                            tabla[I.getNumeroEstadoDFA()][simbolos.indexOf(t)] = "s " + d.getDestino().getNumeroEstadoDFA();
+                        }else{
+                            String posibleShiftReduce =tabla[I.getNumeroEstadoDFA()][simbolos.indexOf(t)];
+                            String[] parts =posibleShiftReduce.split(" ");
+                            if(parts[0].equals("r")){
+                                System.out.println("Existe un problema shift-reduce en el estado " + I.getNumeroEstadoDFA() + " con el simbolo " + d.getTransicion());
+                            }
+                        }
                     }
-                    if(nonterminals.contains(d.getTransicion())){
-                        tabla[I.getNumeroEstadoDFA()][simbolos.indexOf(d.getTransicion())] = "g " + d.getDestino().getNumeroEstadoDFA();
+                    if(nonterminals.contains(t)){
+                        tabla[I.getNumeroEstadoDFA()][simbolos.indexOf(t)] = "g " + d.getDestino().getNumeroEstadoDFA();
+                    }
+                }
+            }
+            for (Productions p:I.getProductionsSet()) {
+                String body = p.getBody();
+                String[] parts = body.split(" ");
+                if(parts[parts.length-1].equals("@")){
+                    if(parts[parts.length-2].equals(".")){
+                        tabla[I.getNumeroEstadoDFA()][simbolos.indexOf("@")]="accept";
+                    }
+                }else if(parts[parts.length-1].equals(".")){
+                    //Obteniendo el numero de la produccion que se esta reduciendo.
+                    body = body.substring(0, body.length()-2);
+                    body = bodyC(body);
+                    for (Productions pr:productions) {
+                        String prBody = bodyC(pr.getBody());
+                        if(prBody.equals(body)){
+                            numeroProduccion = productions.indexOf(pr);
+                        }
+                    }
+                    //calculando el follow de la cabeza de la producción
+                    String cabeza = p.getHead();
+                    symbols.clear();
+                    followSymbols.clear();
+                    follow(cabeza, nonterminals, terminals, productions);
+                    for (String s:followSymbols) {
+                        if(tabla[I.getNumeroEstadoDFA()][simbolos.indexOf(s)].equals("")){
+                            tabla[I.getNumeroEstadoDFA()][simbolos.indexOf(s)]="r " + numeroProduccion;
+                        }else{
+                            String posibleShiftReduce =tabla[I.getNumeroEstadoDFA()][simbolos.indexOf(s)];
+                            String[] partss =posibleShiftReduce.split(" ");
+                            if(partss[0].equals("r")){
+                                System.out.println("Existe un problema reduce-reduce en el estado " + I.getNumeroEstadoDFA() + " con el simbolo " + s);
+                            }
+                        }
                     }
                 }
             }
         }
+
+        String cadena = "";
+        for(int j=0;j<cantidad;j++){
+            cadena+=simbolos.get(j)+ "              ";
+        }
+        cadena+="\n";
+        for(int i=0;i<T.size();i++){
+            for(int j=0;j<cantidad;j++){
+                cadena+=tabla[i][j]+ "          ";
+            }
+            cadena+="\n";
+        }
+
+        System.out.println("Se ha creado la tabla de parseo.\n" + cadena);
     }
+
+    public String bodyC(String body){
+        if(body.startsWith(" ")){
+            body = body.substring(1);
+        }
+        if(body.endsWith(" ")){
+            body = body.substring(0,body.length()-1);
+        }
+        return body;
+    }
+
 }

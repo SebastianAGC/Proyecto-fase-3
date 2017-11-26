@@ -31,7 +31,7 @@ public class ParserOperations {
 
         for (Productions p:productions) {
             String body = p.getBody();
-            body = body.substring(0, body.length()-1);
+            //body = body.substring(0, body.length()-1);
             String[] bodyParts = body.split(" ");
             for (String s:bodyParts) {
                 if(!nonterminals.contains(s)){

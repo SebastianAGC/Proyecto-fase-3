@@ -1120,8 +1120,12 @@ public class Operaciones {
                 String head = parts[0];
                 head = head.replace(" ", "");
                 String body = parts[1];
+                if(body.endsWith(".")){
+                    body = body.substring(0, body.length()-1);
+                }
                 //Creates a new Productions type Object and adds it to ProductionsContent ArrayList.
                 Productions theProduction = new Productions(head, body);
+
                 structure.getProductionsContent().add(theProduction);
             }
         }

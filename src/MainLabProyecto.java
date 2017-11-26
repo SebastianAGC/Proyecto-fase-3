@@ -201,6 +201,7 @@ public class MainLabProyecto{
         }
 
         //theParser.creadorTablaParseo(nier, parserOperations.getTerminals(), parserOperations.getNonterminals(), structure.getProductionsContent());
-
+        //Creando la tabla de parseo
+        theParser.parsingTable(nier, parserOperations.getNonterminals(), parserOperations.getTerminals(), structure.getProductionsContent());
     }
 }
